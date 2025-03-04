@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <title>Calendar</title>
+  </head>
+  <body>
+    <div id="calendar">
+      <div id="nav-bar">
+        <button id="prev-btn" class="btn">prev</button>
+        <div id="year-month"></div>
+        <button id="next-btn" class="btn">next</button>
+      </div>
+      <div id="days-container">
+        <div class="day sun">SUN</div>
+        <div class="day">MON</div>
+        <div class="day">TUE</div>
+        <div class="day">WED</div>
+        <div class="day">THU</div>
+        <div class="day">FRI</div>
+        <div class="day sat">SAT</div>
+      </div>
+      <div id="dates-container"></div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
