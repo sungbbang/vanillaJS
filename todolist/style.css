@@ -1,0 +1,16 @@
+* {
+  font-family: 'Noto Serif KR', serif;
+  font-style: normal;
+}
+
+input[type='text'] {
+  size: 100;
+  line-height: 2em;
+  border: none;
+  font-size: 20px;
+}
+
+ul {
+  padding: 0;
+  list-style-type: none;
+}
