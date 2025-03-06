@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  vertical-align: middle;
+}
+
+/* 맨위에 시즌이랑 버튼들  */
+
+.date-container div:first-child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.transparent-btn {
+  background-color: transparent;
+  border: 0;
+  outline: 0;
+  cursor: pointer;
+}
+
+.recent {
+  border: 1px solid #c0c0c0;
+  border-radius: 12px;
+  padding: 0 8px;
+  height: 28px;
+}
+
+.season-wrap {
+  display: flex;
+  align-items: center;
+  margin: 0 30px;
+}
+
+.season-wrap > button {
+  padding: 0 10px;
+}
+
+.season-wrap > button > img {
+  height: 18px;
+}
+
+.current-season {
+  font-size: 32px;
+  font-weight: 900;
+  padding: 0 20px;
+}
+
+.blank {
+  visibility: hidden;
+}
