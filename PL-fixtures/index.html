@@ -7,17 +7,17 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div>
+    <div id="wrap">
       <div class="date-container">
         <div>
-          <button class="recent transparent-btn">최근</button>
+          <button class="recent transparent-btn" disabled>최근</button>
           <div class="season-wrap">
-            <button class="transparent-btn">
-              <img src="./images/icon/left-arrow.png" />
+            <button id="prev-btn" class="transparent-btn">
+              <img src="images/icon/left-arrow.png" />
             </button>
-            <span class="current-season"></span>
-            <button class="transparent-btn">
-              <img src="./images/icon/right-arrow.png" />
+            <span class="current-season">현재 시즌</span>
+            <button id="next-btn" class="transparent-btn disable" disabled>
+              <img src="images/icon/right-arrow.png" />
             </button>
           </div>
           <button class="blank recent">공백</button>
