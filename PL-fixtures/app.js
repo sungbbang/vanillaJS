@@ -1,3 +1,4 @@
+// https://www.api-football.com/documentation-v3
 const API_KEY = 'YOUR_API_KEY';
 const BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -8,15 +9,15 @@ const jsonLocalStorage = {
   setItem: (key, value) => {
     localStorage.setItem(key, JSON.stringify(value));
   },
-  getItem: key => {
+  getItem: (key) => {
     return JSON.parse(localStorage.getItem(key));
   },
-  removeItem: key => {
+  removeItem: (key) => {
     localStorage.removeItem(key);
   },
 };
 
-const getKeyName = year => `pl_fixtures_${year}`;
+const getKeyName = (year) => `pl_fixtures_${year}`;
 
 window.addEventListener('load', async () => {
   const fixtures = await setFixtures(latestYear);
@@ -31,18 +32,11 @@ window.addEventListener('load', async () => {
   paintSeasonFixtures(currentSeasonYear);
 });
 
-async function paintSeasonFixtures(season) {
-  const data = await setFixtures(season);
-
-  paintSeasonText(season);
-  paintMonthTab(data);
-  paintMatchList(data);
-}
-
 async function setFixtures(season) {
-  const fetchedData = fetchLocalStorageFixtures(season) || (await fetchSeasonFixtures(season));
+  const fetchedData =
+    fetchLocalStorageFixtures(season) || (await fetchSeasonFixtures(season, 0));
 
-  if (!fetchedData) {
+  if (!fetchedData || fetchedData.error) {
     return null;
   }
 
@@ -69,7 +63,8 @@ async function setFixtures(season) {
 
 function fetchLocalStorageFixtures(year) {
   const item =
-    jsonLocalStorage.getItem(getKeyName(year)) || jsonLocalStorage.getItem(getKeyName(year - 1));
+    jsonLocalStorage.getItem(getKeyName(year)) ||
+    jsonLocalStorage.getItem(getKeyName(year - 1));
 
   if (!item) {
     return null;
@@ -85,30 +80,41 @@ function fetchLocalStorageFixtures(year) {
   return item;
 }
 
-async function fetchSeasonFixtures(year) {
-  const option = {
-    method: 'GET',
-    headers: {
-      'x-rapidapi-host': 'v3.football.api-sports.io',
-      'x-rapidapi-key': API_KEY,
-    },
-  };
+async function fetchSeasonFixtures(year, depth) {
+  if (depth < 2) {
+    const option = {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': API_KEY,
+      },
+    };
 
-  const url = `${BASE_URL}/fixtures?league=39&season=${year}`;
+    const url = `${BASE_URL}/fixtures?league=39&season=${year}`;
 
-  try {
-    const response = await fetch(url, option);
-    const json = await response.json();
-    const data = json.response;
-    if (data.length === 0) {
-      year--;
-      return fetchSeasonFixtures(year);
+    try {
+      const response = await fetch(url, option);
+      const json = await response.json();
+      const data = json.response;
+      if (data.length === 0) {
+        year--;
+        return fetchSeasonFixtures(year, depth + 1);
+      }
+      return { id: Date.now(), data };
+    } catch (error) {
+      console.log(error);
+      return { error };
     }
-    return { id: Date.now(), data };
-  } catch (error) {
-    console.log(error);
-    return error;
   }
+  return null;
+}
+
+async function paintSeasonFixtures(season) {
+  const data = await setFixtures(season);
+
+  paintSeasonText(season);
+  paintMonthTab(data);
+  paintMatchList(data);
 }
 
 function paintSeasonText(year) {
@@ -120,7 +126,7 @@ function paintMonthTab(fixtures) {
   const monthList = [];
 
   let current = 0;
-  fixtures.forEach(v => {
+  fixtures.forEach((v) => {
     const year = new Date(v.fixture.date).getFullYear();
     const month = new Date(v.fixture.date).getMonth() + 1;
 
@@ -186,9 +192,11 @@ function paintMatchList(fixtures) {
   matchListContainer.innerHTML = '';
 
   const selectedDate = document.querySelector('.select').dataset.date;
-  const [selectedYear, selectedMonth] = selectedDate.split('-').map(v => parseInt(v));
+  const [selectedYear, selectedMonth] = selectedDate
+    .split('-')
+    .map((v) => parseInt(v));
 
-  fixtures.forEach(v => {
+  fixtures.forEach((v) => {
     const date = new Date(v.fixture.date);
     const y = date.getFullYear();
     const m = date.getMonth() + 1;
