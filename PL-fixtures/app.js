@@ -9,15 +9,15 @@ const jsonLocalStorage = {
   setItem: (key, value) => {
     localStorage.setItem(key, JSON.stringify(value));
   },
-  getItem: (key) => {
+  getItem: key => {
     return JSON.parse(localStorage.getItem(key));
   },
-  removeItem: (key) => {
+  removeItem: key => {
     localStorage.removeItem(key);
   },
 };
 
-const getKeyName = (year) => `pl_fixtures_${year}`;
+const getKeyName = year => `pl_fixtures_${year}`;
 
 window.addEventListener('load', async () => {
   const fixtures = await setFixtures(latestYear);
@@ -126,7 +126,7 @@ function paintMonthTab(fixtures) {
   const monthList = [];
 
   let current = 0;
-  fixtures.forEach((v) => {
+  fixtures.forEach(v => {
     const year = new Date(v.fixture.date).getFullYear();
     const month = new Date(v.fixture.date).getMonth() + 1;
 
@@ -151,6 +151,7 @@ function paintMonthTab(fixtures) {
     li.className = 'tab-item';
     const button = document.createElement('button');
     button.className = 'month-btn';
+    button.dataset.date = `${year}-${month}`;
 
     if (year === nowYear && month === nowMonth) {
       button.classList.add('select');
@@ -166,9 +167,9 @@ function paintMonthTab(fixtures) {
       }
       button.classList.add('select');
       selectedBtn = button;
+      paintMatchList(fixtures);
+      updateButtonState();
     });
-
-    button.dataset.date = `${year}-${month}`;
 
     const outerSpan = document.createElement('span');
     outerSpan.className = 'month';
@@ -186,26 +187,130 @@ function paintMonthTab(fixtures) {
   });
 }
 
-const matchListContainer = document.querySelector('.matchlist-container');
-
 function paintMatchList(fixtures) {
+  const matchListContainer = document.querySelector('.matchlist-container');
   matchListContainer.innerHTML = '';
 
-  const selectedDate = document.querySelector('.select').dataset.date;
-  const [selectedYear, selectedMonth] = selectedDate
-    .split('-')
-    .map((v) => parseInt(v));
+  const [selectedYear, selectedMonth] = getSelectedDate();
 
-  fixtures.forEach((v) => {
-    const date = new Date(v.fixture.date);
-    const y = date.getFullYear();
-    const m = date.getMonth() + 1;
-    const d = date.getDate();
+  const maxLen = getMaxLengthOfTeamName(fixtures);
 
-    if (y === selectedYear && m === selectedMonth) {
-      // console.log(date);
+  let currentDate = 0;
+  let currentDiv = null;
+  let currentUl = null;
+  fixtures.forEach(v => {
+    const D = new Date(v.fixture.date);
+    const year = D.getFullYear();
+    const month = D.getMonth() + 1;
+    const date = D.getDate();
+    const day = D.getDay();
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+
+    if (year === selectedYear && month === selectedMonth) {
+      if (currentDate !== date) {
+        currentDate = date;
+        currentDiv = document.createElement('div');
+        currentDiv.className = 'matchlist-group';
+        const dateTitleDiv = document.createElement('div');
+        dateTitleDiv.className = 'date-title';
+        const fixtureDate = document.createElement('h3');
+        fixtureDate.className = 'date-text';
+        fixtureDate.innerText = `${month}월 ${date}일 (${days[day]})`;
+        dateTitleDiv.appendChild(fixtureDate);
+        currentDiv.appendChild(dateTitleDiv);
+        currentUl = document.createElement('ul');
+        currentUl.className = 'match-list';
+        currentDiv.appendChild(currentUl);
+        matchListContainer.appendChild(currentDiv);
+      }
+      const li = document.createElement('li');
+      li.className = 'match-item';
+      const div = document.createElement('div');
+      div.className = 'match-wrapper';
+      div.appendChild(makeMatchContainer(v, maxLen));
+      li.appendChild(div);
+      currentUl.appendChild(li);
     }
   });
+}
+
+function makeMatchContainer(matchInfo, maxLenOfTeamName) {
+  const containerSpan = document.createElement('span');
+  containerSpan.className = 'match-container';
+
+  const teamsSpan = document.createElement('span');
+  teamsSpan.className = 'match-teams';
+  const infoSpan = document.createElement('span');
+  if (matchInfo.fixture.status.long === 'Match Finished') {
+    infoSpan.className = 'match-score';
+    infoSpan.innerText = `${matchInfo.goals.home} - ${matchInfo.goals.away}`;
+  } else {
+    infoSpan.className = 'match-time';
+    const date = new Date(matchInfo.fixture.date);
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    infoSpan.innerText = `${String(hour).padStart(2, '0')}:${String(
+      minute
+    ).padStart(2, '0')}`;
+  }
+  const { home, away } = matchInfo.teams;
+  const homeSpan = document.createElement('span');
+  homeSpan.className = 'match-team';
+  const homeNameSpan = document.createElement('span');
+  homeNameSpan.className = 'match-teamName';
+  homeNameSpan.style.width = `${maxLenOfTeamName}ch`;
+  homeNameSpan.innerText = `${home.name}`;
+  const homeLogoSpan = document.createElement('span');
+  homeLogoSpan.className = 'logo-container';
+  const homeLogo = document.createElement('img');
+  homeLogo.className = 'logo-img';
+  homeLogo.src = `${home.logo}`;
+  homeLogoSpan.appendChild(homeLogo);
+  homeSpan.appendChild(homeNameSpan);
+  homeSpan.appendChild(homeLogoSpan);
+  const awaySpan = document.createElement('span');
+  awaySpan.className = 'match-team';
+  const awayNameSpan = document.createElement('span');
+  awayNameSpan.className = 'match-teamName';
+  awayNameSpan.style.width = `${maxLenOfTeamName}ch`;
+  awayNameSpan.innerText = `${away.name}`;
+  const awayLogoSpan = document.createElement('span');
+  awayLogoSpan.className = 'logo-container';
+  const awayLogo = document.createElement('img');
+  awayLogo.className = 'logo-img';
+  awayLogo.src = `${away.logo}`;
+  awayLogoSpan.appendChild(awayLogo);
+  awaySpan.appendChild(awayLogoSpan);
+  awaySpan.appendChild(awayNameSpan);
+  teamsSpan.appendChild(homeSpan);
+  teamsSpan.appendChild(infoSpan);
+  teamsSpan.appendChild(awaySpan);
+
+  const stadiumSpan = document.createElement('span');
+  stadiumSpan.className = 'match-stadium';
+  stadiumSpan.innerText = `${matchInfo.fixture.venue.name}`;
+
+  containerSpan.appendChild(teamsSpan);
+  containerSpan.appendChild(stadiumSpan);
+  return containerSpan;
+}
+
+function getMaxLengthOfTeamName(fixtures) {
+  const team = new Set();
+  fixtures.forEach(v => {
+    if (team.size === 20) return;
+    team.add(v.teams.home.name);
+    team.add(v.teams.away.name);
+  });
+
+  let maxLength = 0;
+  team.forEach(v => {
+    if (v.length > maxLength) {
+      maxLength = v.length;
+    }
+  });
+
+  return maxLength;
 }
 
 const recentBtn = document.querySelector('.recent');
@@ -214,13 +319,15 @@ const nextSeasonBtn = document.getElementById('next-btn');
 
 recentBtn.addEventListener('click', () => {
   paintSeasonFixtures(latestYear);
-  updateButtonState(latestYear);
+  currentSeasonYear = latestYear;
+  updateButtonState();
+  recentBtn.disabled = true;
 });
 
 prevSeasonBtn.addEventListener('click', () => {
   if (currentSeasonYear > latestYear - 4) {
     currentSeasonYear--;
-    updateButtonState(currentSeasonYear);
+    updateButtonState();
     paintSeasonFixtures(currentSeasonYear);
   }
 });
@@ -228,21 +335,21 @@ prevSeasonBtn.addEventListener('click', () => {
 nextSeasonBtn.addEventListener('click', () => {
   if (currentSeasonYear < latestYear) {
     currentSeasonYear++;
-    updateButtonState(currentSeasonYear);
+    updateButtonState();
     paintSeasonFixtures(currentSeasonYear);
   }
 });
 
-function updateButtonState(year) {
+function updateButtonState() {
   const DISABLE_CLASSNAME = 'disable';
 
-  if (year === latestYear) {
+  if (currentSeasonYear === latestYear) {
     recentBtn.disabled = true;
   } else {
     recentBtn.disabled = false;
   }
 
-  if (year === latestYear) {
+  if (currentSeasonYear === latestYear) {
     nextSeasonBtn.classList.add(DISABLE_CLASSNAME);
     nextSeasonBtn.disabled = true;
   } else {
@@ -250,11 +357,20 @@ function updateButtonState(year) {
     nextSeasonBtn.disabled = false;
   }
 
-  if (year === latestYear - 4) {
+  if (currentSeasonYear === latestYear - 4) {
     prevSeasonBtn.classList.add(DISABLE_CLASSNAME);
     prevSeasonBtn.disabled = true;
   } else {
     prevSeasonBtn.classList.remove(DISABLE_CLASSNAME);
     prevSeasonBtn.disabled = false;
   }
+}
+
+function getSelectedDate() {
+  const selectedDate = document.querySelector('.select').dataset.date;
+  const [selectedYear, selectedMonth] = selectedDate
+    .split('-')
+    .map(v => parseInt(v));
+
+  return [selectedYear, selectedMonth];
 }
